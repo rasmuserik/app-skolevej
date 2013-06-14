@@ -1,4 +1,6 @@
-# npm install glob
+#  mangle kml data into json
+
+Remember: npm install glob
 
     result = []
 
@@ -29,11 +31,13 @@
                 current.point = [+lat, +lng]
                 intersections.push current
                 current = {}
-        console.log intersections
         intersections
 
     handleArea = (routes, intersections, id) ->
-        result.push [routes, intersections, id]
+        result.push
+            name: routes[0].skole or id
+            routes: ({type: route.skoleruter, path: route.path} for route in routes)
+            intersections: ({type: intersection.krydstype, point: intersection.point} for intersection in intersections)
 
     done = ->
         console.log JSON.stringify result

@@ -6,6 +6,10 @@ Currently just code getting to know leaflet
 
 
     Meteor.startup ->
+      data = Meteor.http.get "/data.json", (err, data) ->
+        throw err if err
+        data = data.data
+
         map = L.map('map').setView([55.3997225, 10.3852104], 15)
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png',{
             attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -15,6 +19,10 @@ Currently just code getting to know leaflet
         window.path = path =  new L.Polyline latlngs, 
             weight: 5
             color: "red"
+
+        for school in data
+            for route in school.routes
+                (new L.Polyline route.path, {weight: 5, color: "blue"}).addTo(map).bringToFront()
 
         path.addTo(map).bringToFront()
         path.on "click", (e) ->
