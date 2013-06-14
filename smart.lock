@@ -1,0 +1,25 @@
+{
+  "meteor": {
+    "git": "https://github.com/meteor/meteor.git",
+    "branch": "master",
+    "commit": "9bb2b5447e845c4f483df5e9b42a2c1de5ab909b"
+  },
+  "dependencies": {
+    "basePackages": {
+      "qp": {
+        "path": "../../qp"
+      },
+      "async": {}
+    },
+    "packages": {
+      "qp": {
+        "path": "../../qp"
+      },
+      "async": {
+        "git": "https://github.com/peerlibrary/meteor-async.git",
+        "tag": "v0.1.0",
+        "commit": "cd63f989022dea6b2e0924d9ffec9a74abbaa3ee"
+      }
+    }
+  }
+}
