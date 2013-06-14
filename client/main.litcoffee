@@ -2,6 +2,8 @@
 
 Utility for editing skoleveje.
 
+Currently just code getting to know leaflet
+
 
     Meteor.startup ->
         map = L.map('map').setView([55.3997225, 10.3852104], 15)
@@ -27,7 +29,7 @@ Utility for editing skoleveje.
             clickable: true
             draggable: true
         map.addLayer intersection2
-        intersection2.bindPopup "Hello foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo foo"
+        intersection2.bindPopup "Hello"
 
 
         #intersection = new L.CircleMarker new L.LatLng(55.369091599305875,10.455253617240372), 
