@@ -36,6 +36,15 @@ Remember: npm install glob
     handleArea = (routes, intersections, id) ->
         result.push
             name: routes[0].skole or id
+            id: id
+            routeTypes:
+                "1": "Dummyværdier... skal matche værdier i data"
+                "2": "1.-3. klasse"
+                "4": "4.-5. klasse"
+            intersectionTypes:
+                "1": "Dummyværdier... skal matche værdier i data"
+                "2": "1.-3. klasse"
+                "4": "4.-5. klasse"
             routes: ({type: route.skoleruter, path: route.path} for route in routes)
             intersections: ({type: intersection.krydstype, point: intersection.point} for intersection in intersections)
 
