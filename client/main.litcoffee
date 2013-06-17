@@ -23,6 +23,7 @@ Currently just code getting to know leaflet
                 select
 
         routeColors = 
+            0: "purple"
             1: "red"
             2: "blue"
             3: "green"
@@ -37,23 +38,32 @@ Currently just code getting to know leaflet
         showSchool = (i) ->
             items.clearLayers()
             currentSchool = data[i]
+            console.log data[i]
             for route in currentSchool.routes
-                (new L.Polyline route.path, 
+                polyline = new L.Polyline route.path, 
                     color: (routeColors[route.type] or "black")
                     routeType: route.type or "type missing"
-                ).addTo(items)
+                polyline.bindPopup "Rute type " + route.type
+                polyline.addTo items
             for intersection in currentSchool.intersections
                 marker = new L.Marker intersection.point, 
                     icon: L.divIcon {className: "intersection type#{intersection.type}"}
                     intersectionType: intersection.type or "type missing"
                 marker.bindPopup "Kryds type " + intersection.type
                 marker.addTo items
-            layers2data()
+            map.fitBounds items.getBounds()
 
         latLng2array = (latLng) -> [latLng.lat, latLng.lng]
 
-        layers2data = ->
-            console.log "before", (JSON.stringify currentSchool).slice(0, 800)
+        statusSaving = -> "TODO"
+        statusSavingDone = -> "TODO"
+        upload = ->
+            setTimeout statusSavingDone, 2000
+            console.log "TODO: upload", currentSchool
+            "TODO"
+
+        saveAndUpload = ->
+            statusSaving()
             currentSchool.routes = []
             currentSchool.intersections = []
             items.eachLayer (layer) ->
@@ -65,16 +75,15 @@ Currently just code getting to know leaflet
                     currentSchool.intersections.push
                         type: layer.options.intersectionType
                         point: latLng2array layer.getLatLng()
-            console.log " after", (JSON.stringify currentSchool).slice(0, 800)
+            upload()
 
         Meteor.http.get "/data.json", (err, result) ->
             throw err if err
             window.data = data = result.data
 
-            map = L.map('map').setView([55.3997225, 10.3852104], 13)
-            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png',{
-                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-                }).addTo(map);
+            map = L.map 'map',
+                attributionControl: false
+            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
 
             window.items = items = new L.FeatureGroup()
             items.addTo(map).bringToFront()
@@ -104,3 +113,4 @@ Currently just code getting to know leaflet
                     layer.addTo items
                 console.log event
 
+            map.on 'draw:edited draw:deleted draw:created', saveAndUpload
