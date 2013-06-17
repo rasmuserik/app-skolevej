@@ -82,8 +82,25 @@ Currently just code getting to know leaflet
             showSchool 0
 
             drawControl = new L.Control.Draw
+                draw:
+                    marker: 
+                        icon: L.divIcon {className: "intersection type1"}
+                    polyline: 
+                        shapeOptions:
+                            color: '#0f0'
+                    polygon: false
+                    circle: false
+                    rectangle: false
                 edit: { featureGroup: items }
 
             map.addControl drawControl
             map.addControl(new SchoolChoice())
+            map.on 'draw:created', (event) ->
+                layerType = event.layerType
+                layer = event.layer
+                if layerType is "marker"
+                    layer.addTo items
+                if layerType is "polyline"
+                    layer.addTo items
+                console.log event
 
