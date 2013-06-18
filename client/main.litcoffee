@@ -69,18 +69,35 @@ Currently just code getting to know leaflet
         items = undefined
 
 
-        createStatusPopUp = ->
-            statusPopUp = L.DomUtil.create 'div'
+        createPopUp = (e, types, currentType, selectFn) ->
+            popup = L.popup()
+            popup.setLatLng e.latlng
+            select = L.DomUtil.create "select"
+            for type, desc of types
+                    option = L.DomUtil.create 'option', undefined, select
+                    option.value = type
+                    option.selected = true if type is currentType
+                    option.innerHTML = desc
+            select.onchange = (e) ->
+                selectFn (Object.keys types)[e.target.selectedIndex]
+                saveAndUpload()
+                map.closePopup()
+            popup.setContent select
+            popup.openOn map
 
-        updateStatusPopUpRoute = (e) ->
+        statusPopUpRoute = (e) ->
             console.log "route", e
-            status = L.DomUtil.create 'div', undefined, statusPopUp
-            status.innerHTML = "Kind: " +  e.target.options.routeType
-            console.log status, statusPopUp
+            createPopUp e, currentSchool.routeTypes, e.target.options.routeType, (type) ->
+                route = e.layer
+                route.options.color = (routeColors[route.type] or "black")
+                route.options.routeType = type
+                route.redraw()
             "TODO"
 
-        updateStatusPopUpIntersection = (e) ->
+        statusPopUpIntersection = (e) ->
             console.log "intersection"
+            createPopUp e, currentSchool.intersectionTypes, e.target.options.intersectionType, (type) ->
+                e.layer.options.intersectionType = type
             "TODO"
             
         showSchool = (i) ->
@@ -92,7 +109,7 @@ Currently just code getting to know leaflet
                     color: (routeColors[route.type] or "black")
                     routeType: route.type or "type missing"
 
-                polyline.on "click", updateStatusPopUpRoute
+                polyline.on "click", statusPopUpRoute
 
                 polyline.addTo items
             for intersection in currentSchool.intersections
@@ -100,7 +117,7 @@ Currently just code getting to know leaflet
                     icon: L.divIcon {className: "intersection type#{intersection.type}"}
                     intersectionType: intersection.type or "type missing"
 
-                marker.on "click", updateStatusPopUpIntersection
+                marker.on "click", statusPopUpIntersection
 
                 marker.addTo items
             map.fitBounds items.getBounds()
@@ -168,5 +185,3 @@ Currently just code getting to know leaflet
                 console.log event
 
             map.on 'draw:edited draw:deleted draw:created', saveAndUpload
-
-            createStatusPopUp()
