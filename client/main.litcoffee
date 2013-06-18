@@ -8,6 +8,25 @@ Currently just code getting to know leaflet
 ## Load data
 
     Meteor.startup ->
+        doExport = ->
+            ($ "#exportPopUp").remove() 
+            html = '<form id="exportPopUp" method="GET" action="http://example.com/form/submit" target="_blank">'
+            for school in data
+                # TODO: check htmlsyntax below is correct
+                id = school.id.trim()
+                html += "<span class=\"exportPopUpOption\">"
+                html += "<input type=\"checkbox\" id=\"popup#{id}\" name=\"#{id}\" checked />"
+                html += "<label for=\"popup#{id}\">#{school.name}</label>"
+                html += "</span>"
+            html += '<div style="text-align:right"><input type="submit" value="Download" /></div>'
+            html += '</form>'
+            $popup = $ html
+            ($ "#map").append($popup)
+            $popup.on "submit", -> $popup.remove()
+
+
+
+
         SchoolChoice = L.Control.extend
             options: { position: 'topright' }
             onAdd: (map) -> 
@@ -22,6 +41,20 @@ Currently just code getting to know leaflet
                     option.innerHTML = school.name
                 select
 
+        Button = L.Control.extend
+            options: {position: 'topright' }
+            initialize: (content, fn) ->
+                @_content = content
+                @_fn = fn
+                console.log this
+                # Button.prototype.initialize.call this
+            onAdd: ->
+                button = L.DomUtil.create 'button', 'button'
+                button.innerHTML = @_content
+                button.onclick = @_fn
+                button
+                
+
         routeColors = 
             0: "purple"
             1: "red"
@@ -35,6 +68,21 @@ Currently just code getting to know leaflet
         map = undefined
         items = undefined
 
+
+        createStatusPopUp = ->
+            statusPopUp = L.DomUtil.create 'div'
+
+        updateStatusPopUpRoute = (e) ->
+            console.log "route", e
+            status = L.DomUtil.create 'div', undefined, statusPopUp
+            status.innerHTML = "Kind: " +  e.target.options.routeType
+            console.log status, statusPopUp
+            "TODO"
+
+        updateStatusPopUpIntersection = (e) ->
+            console.log "intersection"
+            "TODO"
+            
         showSchool = (i) ->
             items.clearLayers()
             currentSchool = data[i]
@@ -43,13 +91,17 @@ Currently just code getting to know leaflet
                 polyline = new L.Polyline route.path, 
                     color: (routeColors[route.type] or "black")
                     routeType: route.type or "type missing"
-                polyline.bindPopup "Rute type " + route.type
+
+                polyline.on "click", updateStatusPopUpRoute
+
                 polyline.addTo items
             for intersection in currentSchool.intersections
                 marker = new L.Marker intersection.point, 
                     icon: L.divIcon {className: "intersection type#{intersection.type}"}
                     intersectionType: intersection.type or "type missing"
-                marker.bindPopup "Kryds type " + intersection.type
+
+                marker.on "click", updateStatusPopUpIntersection
+
                 marker.addTo items
             map.fitBounds items.getBounds()
 
@@ -103,7 +155,9 @@ Currently just code getting to know leaflet
                 edit: { featureGroup: items }
 
             map.addControl drawControl
-            map.addControl(new SchoolChoice())
+            map.addControl new SchoolChoice() 
+            map.addControl new Button "Eksportér", doExport
+
             map.on 'draw:created', (event) ->
                 layerType = event.layerType
                 layer = event.layer
@@ -114,3 +168,5 @@ Currently just code getting to know leaflet
                 console.log event
 
             map.on 'draw:edited draw:deleted draw:created', saveAndUpload
+
+            createStatusPopUp()
