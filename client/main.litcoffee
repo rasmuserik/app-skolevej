@@ -187,4 +187,4 @@ Utility for editing skoleveje.
                     layer.addTo items
 
             map.on 'draw:edited draw:deleted draw:created', saveAndUpload
-            map.on 'draw:remove', -> map.closePopup()
+            map.on 'layerremove', -> map.closePopup()
