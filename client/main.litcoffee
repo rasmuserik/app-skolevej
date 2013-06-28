@@ -2,10 +2,6 @@
 
 Utility for editing skoleveje.
 
-Currently just code getting to know leaflet
-
-
-## Load data
 
     Meteor.startup ->
         doExport = ->
@@ -23,9 +19,6 @@ Currently just code getting to know leaflet
             $popup = $ html
             ($ "#map").append($popup)
             $popup.on "submit", -> $popup.remove()
-
-
-
 
         SchoolChoice = L.Control.extend
             options: { position: 'topright' }
@@ -46,14 +39,15 @@ Currently just code getting to know leaflet
             initialize: (content, fn) ->
                 @_content = content
                 @_fn = fn
-                console.log this
-                # Button.prototype.initialize.call this
             onAdd: ->
                 button = L.DomUtil.create 'button', 'button'
                 button.innerHTML = @_content
                 button.onclick = @_fn
                 button
-                
+
+        saveIndicator = new L.Control.Attribution
+            prefix: "Saving..."
+
 
         routeColors = 
             0: "purple"
@@ -61,12 +55,14 @@ Currently just code getting to know leaflet
             2: "blue"
             3: "green"
             4: "yellow"
-            5: "white"
+            5: "pink"
 
-        currentSchool = undefined;
+        currentSchool = undefined
         data = undefined
         map = undefined
         items = undefined
+        defaultRouteType = undefined
+        defaultIntersectionType = undefined
 
 
         createPopUp = (e, types, currentType, selectFn) ->
@@ -86,24 +82,19 @@ Currently just code getting to know leaflet
             popup.openOn map
 
         statusPopUpRoute = (e) ->
-            console.log "route", e
             createPopUp e, currentSchool.routeTypes, e.target.options.routeType, (type) ->
+                defaultRouteType = type
                 route = e.layer
                 route.options.color = (routeColors[route.type] or "black")
                 route.options.routeType = type
-                route.redraw()
-            "TODO"
 
         statusPopUpIntersection = (e) ->
-            console.log "intersection"
             createPopUp e, currentSchool.intersectionTypes, e.target.options.intersectionType, (type) ->
+                defaultIntersectionType = type
                 e.layer.options.intersectionType = type
-            "TODO"
-            
-        showSchool = (i) ->
+
+        renderCurrentSchool = () ->
             items.clearLayers()
-            currentSchool = data[i]
-            console.log data[i]
             for route in currentSchool.routes
                 polyline = new L.Polyline route.path, 
                     color: (routeColors[route.type] or "black")
@@ -118,17 +109,26 @@ Currently just code getting to know leaflet
                     intersectionType: intersection.type or "type missing"
 
                 marker.on "click", statusPopUpIntersection
-
                 marker.addTo items
+
+        showSchool = (i) ->
+            currentSchool = data[i]
+            renderCurrentSchool()
             map.fitBounds items.getBounds()
 
         latLng2array = (latLng) -> [latLng.lat, latLng.lng]
 
-        statusSaving = -> "TODO"
-        statusSavingDone = -> "TODO"
+
+        statusShowing = 0
+        statusSaving = -> 
+            ++statusShowing
+            map.addControl saveIndicator if statusShowing is 1
+        statusSavingDone = -> 
+            --statusShowing
+            map.removeControl saveIndicator if statusShowing is 0
+
         upload = ->
             setTimeout statusSavingDone, 2000
-            console.log "TODO: upload", currentSchool
             "TODO"
 
         saveAndUpload = ->
@@ -144,6 +144,7 @@ Currently just code getting to know leaflet
                     currentSchool.intersections.push
                         type: layer.options.intersectionType
                         point: latLng2array layer.getLatLng()
+            renderCurrentSchool()
             upload()
 
         Meteor.http.get "/data.json", (err, result) ->
@@ -179,9 +180,11 @@ Currently just code getting to know leaflet
                 layerType = event.layerType
                 layer = event.layer
                 if layerType is "marker"
+                    layer.options.intersectionType = defaultIntersectionType || 1
                     layer.addTo items
                 if layerType is "polyline"
+                    layer.options.routeType = defaultRouteType || 1
                     layer.addTo items
-                console.log event
 
             map.on 'draw:edited draw:deleted draw:created', saveAndUpload
+            map.on 'draw:remove', -> map.closePopup()
