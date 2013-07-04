@@ -1,10 +1,12 @@
 #{{{ HTTP file server
 express = require 'express'
 app = express()
-
 app.use express.static __dirname
-app.listen process.env.PORT || 8080
-
+#}}}
+#{{{ API handle posts
+app.post '/api', (req, res) ->
+  console.log req, res
+  res.end()
 #}}}
 #{{{ API server
 
@@ -76,5 +78,8 @@ convertKmlToJson = -> #{{{
         handleArea (extractRoutes routeXml), (extractIntersections intersectionXml), dir.slice(4)
       done()
     #}}}
+#}}}
+#{{{main
+app.listen process.env.PORT || 8080
 convertKmlToJson()
 #}}}
