@@ -1,14 +1,25 @@
 window.skolevejEditor = (mapId, apiUrl) ->
-  latLng2array = (latLng) -> [latLng.lat, latLng.lng] #{{{4
+
+  # Utility function for changing a latLng object into a two-element array.
+  latLng2array = (latLng) -> [latLng.lat, latLng.lng]
 
   #state{{{4
+  
+  # Data for the current school, including routes and intersections
   currentSchool = undefined
+
+  # Reference to the Leaflet map-object
   map = undefined
+
+  # The layer containing the routes and intersections.
   items = undefined
+
+  # Keep track of what kind of route/intersection will be created.
+  # Whenever a route/intersection type is changed, this will also
+  # be the default for newly reated ones
   defaultRouteType = undefined
   defaultIntersectionType = undefined
 
-  statusShowing = 0
   doExport = -> #{{{4
     ($ "#exportPopUp").remove() 
     html = '<form id="exportPopUp" method="GET" action="' + apiUrl + "/export" + '" target="_blank">'

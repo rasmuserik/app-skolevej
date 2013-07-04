@@ -9,6 +9,8 @@ Utility for editing skoleveje. Documentation below is in danish, as it is target
 - `index.html` eksempel på html-kode der indlejrer editoren
 - `lib/` dependencies (jquery+leaflet.draw)
 
+All code is written in coffeescript, which can also be compiled into somewhat readable javascript.
+
 ## Kørsel af demo
 
 - Sikr at node(http://nodejs.org/) og CoffeeScript `npm install -g coffee-script`

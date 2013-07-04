@@ -1,20 +1,31 @@
+# Dummy/demo server and data mangler
+#
+# Piece of code for development purpose, will be replaced by real backend later on.
+# Does the following
+#
+# - mangle skolevej-data into json
+# - serves local directory, including api/ which gets generated data to what would be expected from api
+# - handles posts/saving of changes of data by writing it to stdout
+#
 #{{{ HTTP file server
+
 express = require 'express'
 app = express()
 app.use express.static __dirname
+
 #}}}
 #{{{ API handle posts
+
 app.use express.bodyParser()
 app.post '/api/*', (req, res) ->
   console.log req, res
   console.log req.body
   res.end()
-#}}}
-#{{{ API server
 
 #}}}
 #{{{ mangle kml data into json
-convertKmlToJson = -> #{{{
+
+convertKmlToJson = ->
     result = []
 
     extractRoutes = (xml) ->
@@ -65,11 +76,13 @@ convertKmlToJson = -> #{{{
 
     done = ->
         schoolList = {}
+        fs.mkdirSync "api" if not fs.existsSync "api"
         result.sort (a,b) -> if a.name < b.name then -1 else 1
         for school in result
             schoolList[school.name] = school.id
             fs.writeFileSync "api/" + school.id, JSON.stringify school
         fs.writeFileSync "api/schools", JSON.stringify schoolList
+        console.log "created datafiles in api/"
 
     fs = require 'fs'
 
@@ -79,9 +92,13 @@ convertKmlToJson = -> #{{{
         intersectionXml = fs.readFileSync "#{dir}/intersection.kml", "utf-8"
         handleArea (extractRoutes routeXml), (extractIntersections intersectionXml), dir.slice(4)
       done()
-    #}}}
+
 #}}}
 #{{{main
-app.listen process.env.PORT || 8080
+
+port = process.env.PORT || 8080
+app.listen port
+console.log "starte demo-server on port " + port
 convertKmlToJson()
+
 #}}}
