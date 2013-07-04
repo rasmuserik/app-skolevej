@@ -13,9 +13,16 @@ All code is written in coffeescript, which can also be compiled into somewhat re
 
 ## Kørsel af demo
 
-- Sikr at node(http://nodejs.org/) og CoffeeScript `npm install -g coffee-script`
-- Check dette repositorie, samt `skolevej-odense-kommune` fra bitbucket ud.
-- `cd app-skolevej` `npm install` `coffee server.coffee`, og navigér derefter til http://localhost:8080/
+Installer node, og derefter:
+
+    sudo npm install -g coffee-script
+    git clone git@bitbucket.org:hammertimedk/skolevej-odense-kommune.git # privat repos, kræver adgang
+    git clone https://github.com/rasmuserik/app-skolevej.git
+    cd app-skolevej
+    npm install
+    coffee server.coffee
+
+og navigér så til http://localhost:8080/
 
 ## Indlejring af skolevejseditor i side.
 
