@@ -108,7 +108,6 @@ window.skolevejEditor = (mapId, apiUrl) ->
 
   loadAndShowSchool = (i) -> #{{{4
     url = apiUrl + "/" + (id for name, id of schools)[i]
-    console.log "url:", url
     $.get url, (res) ->
       currentSchool = JSON.parse res
       renderCurrentSchool()
@@ -116,7 +115,6 @@ window.skolevejEditor = (mapId, apiUrl) ->
 
   upload = -> #{{{4
     map.addControl saveIndicator
-    console.log "upload", currentSchool.id
     $.post "#{apiUrl}/#{currentSchool.id}", {new: JSON.stringify currentSchool}, ->
       map.removeControl saveIndicator
 
@@ -168,7 +166,8 @@ window.skolevejEditor = (mapId, apiUrl) ->
       if layerType is "polyline"
         layer.options.routeType = defaultRouteType || 1
         layer.addTo items
-    map.on 'draw:edited draw:deleted draw:created', saveAndUpload
+    map.on 'draw:edited draw:deleted draw:created', ->
+        setTimeout saveAndUpload, 0
     map.on 'layerremove', -> map.closePopup()
 
   $.get apiUrl + "/schools", (res) -> #{{{4
