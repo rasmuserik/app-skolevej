@@ -60,7 +60,6 @@ convertKmlToJson = -> #{{{
             intersections: ({type: intersection.krydstype, point: intersection.point} for intersection in intersections)
 
     done = ->
-        console.log JSON.stringify result
         schoolList = {}
         result.sort (a,b) -> if a.name < b.name then -1 else 1
         for school in result
