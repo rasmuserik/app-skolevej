@@ -1,7 +1,16 @@
-#  mangle kml data into json
+#{{{ HTTP file server
+express = require 'express'
+app = express()
 
-Remember: npm install glob
+app.use express.static __dirname
+app.listen process.env.PORT || 8080
 
+#}}}
+#{{{ API server
+
+#}}}
+#{{{ mangle kml data into json
+convertKmlToJson = -> #{{{
     result = []
 
     extractRoutes = (xml) ->
@@ -33,7 +42,7 @@ Remember: npm install glob
                 current = {}
         intersections
 
-    types = 
+    types =
         "0": "Dummyværdier... skal matche værdier i data"
         "1": "1.-2. klasse"
         "2": "3.-4. klasse"
@@ -67,3 +76,6 @@ Remember: npm install glob
         intersectionXml = fs.readFileSync "#{dir}/intersection.kml", "utf-8"
         handleArea (extractRoutes routeXml), (extractIntersections intersectionXml), dir.slice(4)
       done()
+    #}}}
+convertKmlToJson()
+#}}}

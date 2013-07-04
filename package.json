@@ -1,0 +1,15 @@
+{
+  "name": "skolevej",
+  "version": "0.0.1",
+  "author": "Rasmus Erik Voel Jensen",
+  "homepage": "http://github.com/rasmuserik/app-skolevej",
+  "description": "(Danish) Utility for editing grade-tagged routes for public schools",
+  "dependencies": {
+    "express": "*",
+    "glob": "*"
+  },
+  "scripts": {
+      "test": "false"
+  },
+  "engines": {"node": "*"}
+}

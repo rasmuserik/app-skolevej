@@ -1,6 +1,0 @@
-[submodule "public/Leaflet.draw"]
-	path = public/Leaflet.draw
-	url = git@github.com:Leaflet/Leaflet.draw.git
-[submodule "public/Leaflet"]
-	path = public/Leaflet
-	url = git@github.com:Leaflet/Leaflet.git
