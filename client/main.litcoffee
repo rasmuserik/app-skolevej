@@ -2,13 +2,16 @@
 
 Utility for editing skoleveje.
 
+    apiUrl = "/api"
+    exportUrl = 'http://example.com/form/submit'
+    data = undefined
 
-    Meteor.startup ->
+
+    main = ->
         doExport = ->
             ($ "#exportPopUp").remove() 
-            html = '<form id="exportPopUp" method="GET" action="http://example.com/form/submit" target="_blank">'
+            html = '<form id="exportPopUp" method="GET" action="' + apiUrl + "/export" + '" target="_blank">'
             for school in data
-                # TODO: check htmlsyntax below is correct
                 id = school.id.trim()
                 html += "<span class=\"exportPopUpOption\">"
                 html += "<input type=\"checkbox\" id=\"popup#{id}\" name=\"#{id}\" checked />"
@@ -58,7 +61,6 @@ Utility for editing skoleveje.
             5: "pink"
 
         currentSchool = undefined
-        data = undefined
         map = undefined
         items = undefined
         defaultRouteType = undefined
@@ -147,11 +149,9 @@ Utility for editing skoleveje.
             renderCurrentSchool()
             upload()
 
-        Meteor.http.get "/data.json", (err, result) ->
-            throw err if err
-            window.data = data = result.data
-
-            map = L.map 'map',
+        initMap = (mapId) ->
+            mapId = mapId || 'map'
+            map = L.map mapId,
                 attributionControl: false
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
 
@@ -160,7 +160,7 @@ Utility for editing skoleveje.
 
             showSchool 0
 
-            drawControl = new L.Control.Draw
+            map.addControl new L.Control.Draw
                 draw:
                     marker: 
                         icon: L.divIcon {className: "intersection type1"}
@@ -171,8 +171,6 @@ Utility for editing skoleveje.
                     circle: false
                     rectangle: false
                 edit: { featureGroup: items }
-
-            map.addControl drawControl
             map.addControl new SchoolChoice() 
             map.addControl new Button "Eksportér", doExport
 
@@ -188,3 +186,11 @@ Utility for editing skoleveje.
 
             map.on 'draw:edited draw:deleted draw:created', saveAndUpload
             map.on 'layerremove', -> map.closePopup()
+
+        initMap()
+
+    Meteor.startup ->
+        Meteor.http.get apiUrl + "/data.json", (err, result) ->
+            throw err if err
+            window.data = data = result.data
+            main()
