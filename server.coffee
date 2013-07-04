@@ -4,8 +4,10 @@ app = express()
 app.use express.static __dirname
 #}}}
 #{{{ API handle posts
-app.post '/api', (req, res) ->
+app.use express.bodyParser()
+app.post '/api/*', (req, res) ->
   console.log req, res
+  console.log req.body
   res.end()
 #}}}
 #{{{ API server
