@@ -3,19 +3,15 @@
 Utility for editing skoleveje.
 
     apiUrl = "/api"
-    exportUrl = 'http://example.com/form/submit'
-    data = undefined
-
 
     main = ->
         doExport = ->
             ($ "#exportPopUp").remove() 
             html = '<form id="exportPopUp" method="GET" action="' + apiUrl + "/export" + '" target="_blank">'
-            for school in data
-                id = school.id.trim()
+            for name, id of schools
                 html += "<span class=\"exportPopUpOption\">"
                 html += "<input type=\"checkbox\" id=\"popup#{id}\" name=\"#{id}\" checked />"
-                html += "<label for=\"popup#{id}\">#{school.name}</label>"
+                html += "<label for=\"popup#{id}\">#{name}</label>"
                 html += "</span>"
             html += '<div style="text-align:right"><input type="submit" value="Download" /></div>'
             html += '</form>'
@@ -32,9 +28,9 @@ Utility for editing skoleveje.
                 select.onchange = (e) ->
                     showSchool select.selectedIndex
                 select.name = "school"
-                for school in data
+                for name, id of schools
                     option = L.DomUtil.create 'option', undefined, select
-                    option.innerHTML = school.name
+                    option.innerHTML = name
                 select
 
         Button = L.Control.extend
@@ -114,9 +110,12 @@ Utility for editing skoleveje.
                 marker.addTo items
 
         showSchool = (i) ->
-            currentSchool = data[i]
-            renderCurrentSchool()
-            map.fitBounds items.getBounds()
+            url = apiUrl + "/" + (id for name, id of schools)[i]
+            console.log "url:", url
+            $.get url, (res) ->
+                currentSchool = JSON.parse res
+                renderCurrentSchool()
+                map.fitBounds items.getBounds()
 
         latLng2array = (latLng) -> [latLng.lat, latLng.lng]
 
@@ -187,10 +186,11 @@ Utility for editing skoleveje.
             map.on 'draw:edited draw:deleted draw:created', saveAndUpload
             map.on 'layerremove', -> map.closePopup()
 
-        initMap()
+        $.get apiUrl + "/schools", (res) ->
+            window.schools = JSON.parse res
+            initMap()
+
+        
 
     Meteor.startup ->
-        Meteor.http.get apiUrl + "/data.json", (err, result) ->
-            throw err if err
-            window.data = data = result.data
-            main()
+        main()
