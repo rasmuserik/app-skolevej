@@ -52,6 +52,11 @@ Remember: npm install glob
 
     done = ->
         console.log JSON.stringify result
+        schoolList = {}
+        for school in result
+            schoolList[school.name] = school.id
+            fs.writeFileSync "api/" + school.id, JSON.stringify school
+        fs.writeFileSync "api/schools", JSON.stringify schoolList
 
     fs = require 'fs'
 
