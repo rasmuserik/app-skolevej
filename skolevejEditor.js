@@ -31,6 +31,23 @@
         return $popup.remove();
       });
     };
+    Button = L.Control.extend({
+      options: {
+        position: 'topright'
+      },
+      initialize: function(content, fn) {
+        this._content = content;
+        return this._fn = fn;
+      },
+      onAdd: function() {
+        var button;
+
+        button = L.DomUtil.create('button', 'button');
+        button.innerHTML = this._content;
+        button.onclick = this._fn;
+        return button;
+      }
+    });
     SchoolChoice = L.Control.extend({
       options: {
         position: 'topright'
@@ -51,23 +68,6 @@
           option.innerHTML = name;
         }
         return select;
-      }
-    });
-    Button = L.Control.extend({
-      options: {
-        position: 'topright'
-      },
-      initialize: function(content, fn) {
-        this._content = content;
-        return this._fn = fn;
-      },
-      onAdd: function() {
-        var button;
-
-        button = L.DomUtil.create('button', 'button');
-        button.innerHTML = this._content;
-        button.onclick = this._fn;
-        return button;
       }
     });
     saveIndicator = new L.Control.Attribution({
@@ -201,7 +201,7 @@
         attributionControl: false
       });
       L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
-      window.items = items = new L.FeatureGroup();
+      items = new L.FeatureGroup();
       items.addTo(map).bringToFront();
       loadAndShowSchool(0);
       map.addControl(new L.Control.Draw({

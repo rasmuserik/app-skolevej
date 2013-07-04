@@ -3,8 +3,8 @@ window.skolevejEditor = (mapId, apiUrl) ->
   # Utility function for changing a latLng object into a two-element array.
   latLng2array = (latLng) -> [latLng.lat, latLng.lng]
 
-  #state{{{4
-  
+  #{{{4 State
+
   # Data for the current school, including routes and intersections
   currentSchool = undefined
 
@@ -20,8 +20,14 @@ window.skolevejEditor = (mapId, apiUrl) ->
   defaultRouteType = undefined
   defaultIntersectionType = undefined
 
-  doExport = -> #{{{4
-    ($ "#exportPopUp").remove() 
+  # Export popup {{{4
+  #
+  # Create a popup, with a form of checkboxes for each of the schools,
+  # and a download-button that submits the form to _blank
+  #
+  # This is bound to a button created in initMap
+  doExport = ->
+    ($ "#exportPopUp").remove()
     html = '<form id="exportPopUp" method="GET" action="' + apiUrl + "/export" + '" target="_blank">'
     for name, id of schools
       html += "<span class=\"exportPopUpOption\">"
@@ -34,9 +40,28 @@ window.skolevejEditor = (mapId, apiUrl) ->
     ($ "#map").append($popup)
     $popup.on "submit", -> $popup.remove()
 
-  SchoolChoice = L.Control.extend #{{{4
+  # Button object {{{4
+  #
+  # Used when creating a button for export popup (in initMap)
+  Button = L.Control.extend
+    options: {position: 'topright' }
+    initialize: (content, fn) ->
+      @_content = content
+      @_fn = fn
+    onAdd: ->
+      button = L.DomUtil.create 'button', 'button'
+      button.innerHTML = @_content
+      button.onclick = @_fn
+      button
+
+
+  # SchoolChoice dropdown {{{4
+  # with list of schools, used for changing/choosing current school
+  #
+  # Instantiated in initMap
+  SchoolChoice = L.Control.extend
     options: { position: 'topright' }
-    onAdd: (map) -> 
+    onAdd: (map) ->
       select = L.DomUtil.create 'select', "schoolselect"
       select.onmousedown = L.DomEvent.stopPropagation # https://github.com/Leaflet/Leaflet/issues/936
       select.ontouchstart = L.DomEvent.stopPropagation # https://github.com/Leaflet/Leaflet/issues/936
@@ -48,22 +73,12 @@ window.skolevejEditor = (mapId, apiUrl) ->
         option.innerHTML = name
       select
 
-  Button = L.Control.extend #{{{4
-    options: {position: 'topright' }
-    initialize: (content, fn) ->
-      @_content = content
-      @_fn = fn
-    onAdd: ->
-      button = L.DomUtil.create 'button', 'button'
-      button.innerHTML = @_content
-      button.onclick = @_fn
-      button
-
-  saveIndicator = new L.Control.Attribution #{{{4
+  # saveIndicator status message in buttom right corner {{{4
+  saveIndicator = new L.Control.Attribution
     prefix: "Saving..."
 
-
-  routeColors =  #{{{4
+  # routeColors preset colors for the route types {{{4
+  routeColors =
     0: "purple"
     1: "red"
     2: "blue"
@@ -71,7 +86,10 @@ window.skolevejEditor = (mapId, apiUrl) ->
     4: "yellow"
     5: "pink"
 
-  createPopUp = (e, types, currentType, selectFn) -> #{{{4
+  # Status pop up with route/intersection type {{{4
+  #
+  # Common parts of creating popups for routes and interesections
+  createPopUp = (e, types, currentType, selectFn) ->
     popup = L.popup()
     popup.setLatLng e.latlng
     select = L.DomUtil.create "select"
@@ -87,22 +105,25 @@ window.skolevejEditor = (mapId, apiUrl) ->
     popup.setContent select
     popup.openOn map
 
-  statusPopUpRoute = (e) -> #{{{4
+  # route-specific parts of creating a popup
+  statusPopUpRoute = (e) ->
     createPopUp e, currentSchool.routeTypes, e.target.options.routeType, (type) ->
       defaultRouteType = type
       route = e.layer
       route.options.color = (routeColors[route.type] or "black")
       route.options.routeType = type
 
-  statusPopUpIntersection = (e) -> #{{{4
+  # intersection-specific parts of creating a popup
+  statusPopUpIntersection = (e) ->
     createPopUp e, currentSchool.intersectionTypes, e.target.options.intersectionType, (type) ->
       defaultIntersectionType = type
       e.layer.options.intersectionType = type
 
-  renderCurrentSchool = () -> #{{{4
+  # renderCurrentSchool - transform data into map layer {{{4
+  renderCurrentSchool = () ->
     items.clearLayers()
     for route in currentSchool.routes
-      polyline = new L.Polyline route.path, 
+      polyline = new L.Polyline route.path,
         color: (routeColors[route.type] or "black")
         routeType: route.type or "type missing"
 
@@ -110,32 +131,39 @@ window.skolevejEditor = (mapId, apiUrl) ->
 
       polyline.addTo items
     for intersection in currentSchool.intersections
-      marker = new L.Marker intersection.point, 
+      marker = new L.Marker intersection.point,
         icon: L.divIcon {className: "intersection type#{intersection.type}"}
         intersectionType: intersection.type or "type missing"
 
       marker.on "click", statusPopUpIntersection
       marker.addTo items
 
-  loadAndShowSchool = (i) -> #{{{4
+  # loadAndShowSchool(i) #{{{4
+  #
+  # download data from api for a given school, and display it on screen
+  loadAndShowSchool = (i) ->
     url = apiUrl + "/" + (id for name, id of schools)[i]
     $.get url, (res) ->
       currentSchool = JSON.parse res
       renderCurrentSchool()
       map.fitBounds items.getBounds()
 
-  upload = -> #{{{4
+  # post the data to the API, while showing a "saving" indicator {{{4
+  upload = ->
     map.addControl saveIndicator
     $.post "#{apiUrl}/#{currentSchool.id}", {new: JSON.stringify currentSchool}, ->
       map.removeControl saveIndicator
 
-  saveAndUpload = -> #{{{4
+  # saveAndUpload {{{4
+  #
+  # save visual map data into the data structure, and then upload it
+  saveAndUpload = ->
     currentSchool.routes = []
     currentSchool.intersections = []
     items.eachLayer (layer) ->
       if layer.options.routeType
         currentSchool.routes.push
-          path: layer.getLatLngs().map latLng2array 
+          path: layer.getLatLngs().map latLng2array
           type: layer.options.routeType
       if layer.options.intersectionType
         currentSchool.intersections.push
@@ -144,28 +172,30 @@ window.skolevejEditor = (mapId, apiUrl) ->
     renderCurrentSchool()
     upload()
 
-  initMap = -> #{{{4
+  # initMap - initialise map{{{4
+  # and add various controls etc.
+  initMap = ->
     map = L.map mapId,
       attributionControl: false
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
 
-    window.items = items = new L.FeatureGroup()
+    items = new L.FeatureGroup()
     items.addTo(map).bringToFront()
 
     loadAndShowSchool 0
 
     map.addControl new L.Control.Draw
       draw:
-        marker: 
+        marker:
           icon: L.divIcon {className: "intersection type1"}
-        polyline: 
+        polyline:
           shapeOptions:
             color: '#0f0'
         polygon: false
         circle: false
         rectangle: false
       edit: { featureGroup: items }
-    map.addControl new SchoolChoice() 
+    map.addControl new SchoolChoice()
     map.addControl new Button "Eksportér", doExport
 
     map.on 'draw:created', (event) ->
@@ -181,6 +211,9 @@ window.skolevejEditor = (mapId, apiUrl) ->
         setTimeout saveAndUpload, 0
     map.on 'layerremove', -> map.closePopup()
 
+  # main {{{4
+  #
+  # load a list of the scools, and then initialise the map
   $.get apiUrl + "/schools", (res) -> #{{{4
     window.schools = JSON.parse res
     initMap()
