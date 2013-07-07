@@ -175,9 +175,10 @@ window.skolevejEditor = (mapId, apiUrl) ->
   # initMap - initialise map{{{4
   # and add various controls etc.
   initMap = ->
-    map = L.map mapId,
-      attributionControl: false
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
+    map = L.map mapId
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png',
+      attribution: '<a href="http://osm.org/copyright">OpenStreetMap</a>'
+    ).addTo(map)
 
     items = new L.FeatureGroup()
     items.addTo(map).bringToFront()
