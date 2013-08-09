@@ -20,6 +20,9 @@ window.skolevejEditor = (mapId, apiUrl) ->
   defaultRouteType = undefined
   defaultIntersectionType = undefined
 
+  # keep track of whether we are editing
+  editing = undefined
+
   # Export popup {{{4
   #
   # Create a popup, with a form of checkboxes for each of the schools,
@@ -90,6 +93,7 @@ window.skolevejEditor = (mapId, apiUrl) ->
   #
   # Common parts of creating popups for routes and interesections
   createPopUp = (e, types, currentType, selectFn) ->
+    return if editing
     popup = L.popup()
     popup.setLatLng e.latlng
     select = L.DomUtil.create "select"
@@ -199,6 +203,8 @@ window.skolevejEditor = (mapId, apiUrl) ->
     map.addControl new SchoolChoice()
     map.addControl new Button "Eksportér", doExport
 
+    map.on 'draw:editstart', -> editing = true
+    map.on 'draw:editstop', -> editing = false
     map.on 'draw:created', (event) ->
       layerType = event.layerType
       layer = event.layer
