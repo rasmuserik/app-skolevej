@@ -10,8 +10,9 @@
 #{{{ HTTP file server
 
 express = require 'express'
+fs = require 'fs'
 app = express()
-app.use express.static __dirname
+express.mime.define {"application/json": [""]}
 
 #}}}
 #{{{ API handle posts
@@ -22,8 +23,23 @@ app.post '/api/*', (req, res) ->
   console.log req.body
   res.end()
 
+app.get "/api/schools", (req, res) ->
+  fs.readFile "api/schools", (err, data) ->
+    throw err if err
+    res.set "Content-Type", "application/json"
+    res.end data
+
+app.get "/api/school/:id", (req, res) ->
+  fs.readFile "api/" + req.params.id, (err, data) ->
+    throw err if err
+    res.set "Content-Type", "application/json"
+    res.end data
+
+app.use express.static __dirname
+
 #}}}
 #{{{ mangle kml data into json
+
 
 convertKmlToJson = ->
     result = []
@@ -58,27 +74,27 @@ convertKmlToJson = ->
         intersections
 
     types =
-        "0": "Dummyværdier... skal matche værdier i data"
-        "1": "1.-2. klasse"
-        "2": "3.-4. klasse"
-        "3": "5.-6. klasse"
-        "4": "7.-8. klasse"
-        "5": "9.-10. klasse"
+        "1": "0.-1. klasse"
+        "2": "2.-3. klasse"
+        "3": "4.-6. klasse"
+        "4": "7.-10. klasse"
 
     handleArea = (routes, intersections, id) ->
         result.push
             name: routes[0].skole or id
             id: id
-            routeTypes: types
+            # dummy data:
+            point: [55.409849, 10.428568]
             intersectionTypes: types
-            routes: ({type: route.skoleruter, path: route.path} for route in routes)
-            intersections: ({type: intersection.krydstype, point: intersection.point} for intersection in intersections)
+            routes: ({type: +route.skoleruter, path: route.path} for route in routes)
+            intersections: ({type: +intersection.krydstype, point: intersection.point} for intersection in intersections)
 
     done = ->
         schoolList = {}
         fs.mkdirSync "api" if not fs.existsSync "api"
         result.sort (a,b) -> if a.name < b.name then -1 else 1
         for school in result
+            school.id = +school.id
             schoolList[school.name] = school.id
             fs.writeFileSync "api/" + school.id, JSON.stringify school
         fs.writeFileSync "api/schools", JSON.stringify schoolList
@@ -100,5 +116,6 @@ port = process.env.PORT || 8080
 app.listen port
 console.log "starte demo-server on port " + port
 convertKmlToJson()
+
 
 #}}}
