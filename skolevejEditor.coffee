@@ -17,7 +17,6 @@ window.skolevejEditor = (mapId, apiUrl) ->
   # Keep track of what kind of route/intersection will be created.
   # Whenever a route/intersection type is changed, this will also
   # be the default for newly reated ones
-  defaultRouteType = undefined
   defaultIntersectionType = undefined
 
   # keep track of whether we are editing
@@ -31,16 +30,31 @@ window.skolevejEditor = (mapId, apiUrl) ->
   # This is bound to a button created in initMap
   doExport = ->
     ($ "#exportPopUp").remove()
-    html = '<form id="exportPopUp" method="GET" action="' + apiUrl + "/export" + '" target="_blank">'
+    html = '<form id="exportPopUp" method="GET" action="' + apiUrl + "/export" + '">'
     for name, id of schools
       html += "<span class=\"exportPopUpOption\">"
-      html += "<input type=\"checkbox\" id=\"popup#{id}\" name=\"#{id}\" checked />"
+      html += "<input class=\"export-checkbox\" type=\"checkbox\" id=\"popup#{id}\" name=\"#{id}\" checked />"
       html += "<label for=\"popup#{id}\">#{name}</label>"
       html += "</span>"
-    html += '<div style="text-align:right"><input type="submit" value="Download" /></div>'
+    # CODEREVIEW: did split up in strings for readability
+    #html += '<div style="text-align:right">' +
+    #        '<input type="button" class="btn" id="untoggle-checks-btn" value="Fjern afkrydsninger" />' +
+    #        '<input type="button" class="btn" id="toggle-checks-btn" value="Vælg alle" />' +
+    #        '<input class="btn" type="submit" value="Download" />' +
+    #        '</div>'
+    html += '<div style="text-align:right"><input type="button" class="btn" id="untoggle-checks-btn" value="Fjern afkrydsninger" /><input type="button" class="btn" id="toggle-checks-btn" value="Vælg alle" /><input class="btn" type="submit" value="Download" /></div>'
     html += '</form>'
     $popup = $ html
-    ($ "#map").append($popup)
+    # CODEREVIEW: why extra +""
+    $("#" + mapId + "").append $popup
+    # CODEREVIEW: are parameters needed?
+    $popup.delegate '#untoggle-checks-btn', 'click', (e) ->
+      $('.export-checkbox').each (index, el) ->
+        $(this).removeAttr "checked"
+    $popup.delegate '#toggle-checks-btn', 'click', (e) ->
+      $('.export-checkbox').each (index, el) ->
+        $(this).attr "checked", true
+
     $popup.on "submit", -> $popup.remove()
 
   # Button object {{{4
@@ -100,7 +114,8 @@ window.skolevejEditor = (mapId, apiUrl) ->
     for type, desc of types
         option = L.DomUtil.create 'option', undefined, select
         option.value = type
-        option.selected = true if type is currentType
+        # CODEREVIEW parseInt best practise with ,10
+        option.selected = true if parseInt(type) is currentType
         option.innerHTML = desc
     select.onchange = (e) ->
       selectFn (Object.keys types)[e.target.selectedIndex]
@@ -109,19 +124,11 @@ window.skolevejEditor = (mapId, apiUrl) ->
     popup.setContent select
     popup.openOn map
 
-  # route-specific parts of creating a popup
-  statusPopUpRoute = (e) ->
-    createPopUp e, currentSchool.routeTypes, e.target.options.routeType, (type) ->
-      defaultRouteType = type
-      route = e.layer
-      route.options.color = (routeColors[route.type] or "black")
-      route.options.routeType = type
-
   # intersection-specific parts of creating a popup
   statusPopUpIntersection = (e) ->
     createPopUp e, currentSchool.intersectionTypes, e.target.options.intersectionType, (type) ->
-      defaultIntersectionType = type
-      e.layer.options.intersectionType = type
+      defaultIntersectionType = parseInt(type)
+      e.layer.options.intersectionType = parseInt(type)
 
   # renderCurrentSchool - transform data into map layer {{{4
   renderCurrentSchool = () ->
@@ -130,14 +137,24 @@ window.skolevejEditor = (mapId, apiUrl) ->
       polyline = new L.Polyline route.path,
         color: (routeColors[route.type] or "black")
         routeType: route.type or "type missing"
-
-      polyline.on "click", statusPopUpRoute
-
       polyline.addTo items
+
+
+
+    # Hammertime AHJ hacky edit - add an icon for the school 
+    schoolIcon = L.icon iconUrl: 'https://maps.google.com/mapfiles/kml/shapes/schools_maps.png'
+    schoolMarker = new L.Marker currentSchool.point,
+      title: "Klik for at redigere " + currentSchool.name
+      icon: schoolIcon
+      schoolid: currentSchool.id
+    schoolMarker.on 'click', (e) ->
+      window.location = "/1.2/backend/schools/edit/" + this.options.schoolid
+    schoolMarker.addTo items
+
     for intersection in currentSchool.intersections
       marker = new L.Marker intersection.point,
         icon: L.divIcon {className: "intersection type#{intersection.type}"}
-        intersectionType: intersection.type or "type missing"
+        intersectionType: parseInt(intersection.type) or "type missing"
 
       marker.on "click", statusPopUpIntersection
       marker.addTo items
@@ -146,16 +163,21 @@ window.skolevejEditor = (mapId, apiUrl) ->
   #
   # download data from api for a given school, and display it on screen
   loadAndShowSchool = (i) ->
-    url = apiUrl + "/" + (id for name, id of schools)[i]
+    url = apiUrl + "/school/" + (id for name, id of schools)[i]
     $.get url, (res) ->
-      currentSchool = JSON.parse res
+      currentSchool = res
       renderCurrentSchool()
       map.fitBounds items.getBounds()
 
   # post the data to the API, while showing a "saving" indicator {{{4
   upload = ->
     map.addControl saveIndicator
-    $.post "#{apiUrl}/#{currentSchool.id}", {new: JSON.stringify currentSchool}, ->
+    $loadingScreen = $ '<div id="loading-screen" class="fade"></div>'
+    $('#' + mapId).after $loadingScreen
+    $loadingScreen.addClass 'in'
+    $.post "#{apiUrl}/school/#{currentSchool.id}", {new: JSON.stringify currentSchool}, ->
+      $loadingScreen.removeClass 'in'
+      setTimeout (-> $loadingScreen.remove()), 1400
       map.removeControl saveIndicator
 
   # saveAndUpload {{{4
@@ -165,10 +187,10 @@ window.skolevejEditor = (mapId, apiUrl) ->
     currentSchool.routes = []
     currentSchool.intersections = []
     items.eachLayer (layer) ->
+      # Couldn't this be removed
       if layer.options.routeType
         currentSchool.routes.push
           path: layer.getLatLngs().map latLng2array
-          type: layer.options.routeType
       if layer.options.intersectionType
         currentSchool.intersections.push
           type: layer.options.intersectionType
@@ -209,10 +231,10 @@ window.skolevejEditor = (mapId, apiUrl) ->
       layerType = event.layerType
       layer = event.layer
       if layerType is "marker"
-        layer.options.intersectionType = defaultIntersectionType || 1
+        layer.options.intersectionType = parseInt(defaultIntersectionType) || 1
         layer.addTo items
       if layerType is "polyline"
-        layer.options.routeType = defaultRouteType || 1
+        layer.options.routeType = 1
         layer.addTo items
     map.on 'draw:edited draw:deleted draw:created', ->
         setTimeout saveAndUpload, 0
@@ -222,5 +244,5 @@ window.skolevejEditor = (mapId, apiUrl) ->
   #
   # load a list of the scools, and then initialise the map
   $.get apiUrl + "/schools", (res) -> #{{{4
-    window.schools = JSON.parse res
+    window.schools = res
     initMap()
