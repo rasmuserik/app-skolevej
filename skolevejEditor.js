@@ -15,7 +15,9 @@
       var $popup, html, id, name;
 
       ($("#exportPopUp")).remove();
-      html = '<form id="exportPopUp" method="GET" action="' + apiUrl + "/export" + '">';
+      html = "";
+      html += '<form id="exportPopUp" method="GET" action="' + apiUrl + "/export" + '">';
+      html += '<span id="closeExport">x</span>';
       for (name in schools) {
         id = schools[name];
         html += "<span class=\"exportPopUpOption\">";
@@ -23,17 +25,20 @@
         html += "<label for=\"popup" + id + "\">" + name + "</label>";
         html += "</span>";
       }
-      html += '<div style="text-align:right"><input type="button" class="btn" id="untoggle-checks-btn" value="Fjern afkrydsninger" /><input type="button" class="btn" id="toggle-checks-btn" value="Vælg alle" /><input class="btn" type="submit" value="Download" /></div>';
+      html += '<div style="text-align:right">' + '<input type="button" class="btn" id="untoggle-checks-btn" value="Fjern afkrydsninger" />' + '<input type="button" class="btn" id="toggle-checks-btn" value="Vælg alle" />' + '<input class="btn" type="submit" value="Download" />' + '</div>';
       html += '</form>';
       $popup = $(html);
-      $("#" + mapId + "").append($popup);
-      $popup.delegate('#untoggle-checks-btn', 'click', function(e) {
-        return $('.export-checkbox').each(function(index, el) {
+      $("#" + mapId).append($popup);
+      $("#closeExport").on("click", function() {
+        return $popup.remove();
+      });
+      $popup.delegate('#untoggle-checks-btn', 'click', function() {
+        return $('.export-checkbox').each(function() {
           return $(this).removeAttr("checked");
         });
       });
-      $popup.delegate('#toggle-checks-btn', 'click', function(e) {
-        return $('.export-checkbox').each(function(index, el) {
+      $popup.delegate('#toggle-checks-btn', 'click', function() {
+        return $('.export-checkbox').each(function() {
           return $(this).attr("checked", true);
         });
       });
@@ -68,7 +73,7 @@
         select = L.DomUtil.create('select', "schoolselect");
         select.onmousedown = L.DomEvent.stopPropagation;
         select.ontouchstart = L.DomEvent.stopPropagation;
-        select.onchange = function(e) {
+        select.onchange = function() {
           return loadAndShowSchool(select.selectedIndex);
         };
         select.name = "school";
@@ -104,7 +109,7 @@
         desc = types[type];
         option = L.DomUtil.create('option', void 0, select);
         option.value = type;
-        if (parseInt(type) === currentType) {
+        if (parseInt(type, 10) === currentType) {
           option.selected = true;
         }
         option.innerHTML = desc;
@@ -119,8 +124,8 @@
     };
     statusPopUpIntersection = function(e) {
       return createPopUp(e, currentSchool.intersectionTypes, e.target.options.intersectionType, function(type) {
-        defaultIntersectionType = parseInt(type);
-        return e.layer.options.intersectionType = parseInt(type);
+        defaultIntersectionType = parseInt(type, 10);
+        return e.layer.options.intersectionType = parseInt(type, 10);
       });
     };
     renderCurrentSchool = function() {
@@ -144,7 +149,7 @@
         icon: schoolIcon,
         schoolid: currentSchool.id
       });
-      schoolMarker.on('click', function(e) {
+      schoolMarker.on('click', function() {
         return window.location = "/1.2/backend/schools/edit/" + this.options.schoolid;
       });
       schoolMarker.addTo(items);
@@ -156,7 +161,7 @@
           icon: L.divIcon({
             className: "intersection type" + intersection.type
           }),
-          intersectionType: parseInt(intersection.type) || "type missing"
+          intersectionType: parseInt(intersection.type, 10) || "type missing"
         });
         marker.on("click", statusPopUpIntersection);
         _results.push(marker.addTo(items));
@@ -260,7 +265,7 @@
         layerType = event.layerType;
         layer = event.layer;
         if (layerType === "marker") {
-          layer.options.intersectionType = parseInt(defaultIntersectionType) || 1;
+          layer.options.intersectionType = parseInt(defaultIntersectionType, 10) || 1;
           layer.addTo(items);
         }
         if (layerType === "polyline") {

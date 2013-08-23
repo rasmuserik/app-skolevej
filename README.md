@@ -58,7 +58,7 @@ Værktøj til at tegne og redigere ruter og kryds findes i venstre side af skær
 Eksport af data foregår ved `Eksportér` knappen, hvor man først vælge hvilke skoler man ønsker eksporteret, og derefter klikker `Download` for at downloade resultatet.
 # Backlog
 
-- sync code with javascript version
-- skole draggable marker - opdateres i databasen
+- √sync code with javascript version
 - enten legend eller sattelit
-- dismiss på eksportdialog
+- skole draggable marker - opdateres i databasen
+- √dismiss på eksportdialog

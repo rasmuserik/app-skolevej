@@ -30,29 +30,28 @@ window.skolevejEditor = (mapId, apiUrl) ->
   # This is bound to a button created in initMap
   doExport = ->
     ($ "#exportPopUp").remove()
-    html = '<form id="exportPopUp" method="GET" action="' + apiUrl + "/export" + '">'
+    html = ""
+    html += '<form id="exportPopUp" method="GET" action="' + apiUrl + "/export" + '">'
+    html += '<span id="closeExport">x</span>'
     for name, id of schools
       html += "<span class=\"exportPopUpOption\">"
       html += "<input class=\"export-checkbox\" type=\"checkbox\" id=\"popup#{id}\" name=\"#{id}\" checked />"
       html += "<label for=\"popup#{id}\">#{name}</label>"
       html += "</span>"
-    # CODEREVIEW: did split up in strings for readability
-    #html += '<div style="text-align:right">' +
-    #        '<input type="button" class="btn" id="untoggle-checks-btn" value="Fjern afkrydsninger" />' +
-    #        '<input type="button" class="btn" id="toggle-checks-btn" value="Vælg alle" />' +
-    #        '<input class="btn" type="submit" value="Download" />' +
-    #        '</div>'
-    html += '<div style="text-align:right"><input type="button" class="btn" id="untoggle-checks-btn" value="Fjern afkrydsninger" /><input type="button" class="btn" id="toggle-checks-btn" value="Vælg alle" /><input class="btn" type="submit" value="Download" /></div>'
+    html += '<div style="text-align:right">' +
+            '<input type="button" class="btn" id="untoggle-checks-btn" value="Fjern afkrydsninger" />' +
+            '<input type="button" class="btn" id="toggle-checks-btn" value="Vælg alle" />' +
+            '<input class="btn" type="submit" value="Download" />' +
+            '</div>'
     html += '</form>'
     $popup = $ html
-    # CODEREVIEW: why extra +""
-    $("#" + mapId + "").append $popup
-    # CODEREVIEW: are parameters needed?
-    $popup.delegate '#untoggle-checks-btn', 'click', (e) ->
-      $('.export-checkbox').each (index, el) ->
+    $("#" + mapId).append $popup
+    $("#closeExport").on "click", -> $popup.remove()
+    $popup.delegate '#untoggle-checks-btn', 'click', ->
+      $('.export-checkbox').each ->
         $(this).removeAttr "checked"
-    $popup.delegate '#toggle-checks-btn', 'click', (e) ->
-      $('.export-checkbox').each (index, el) ->
+    $popup.delegate '#toggle-checks-btn', 'click', ->
+      $('.export-checkbox').each ->
         $(this).attr "checked", true
 
     $popup.on "submit", -> $popup.remove()
@@ -82,7 +81,7 @@ window.skolevejEditor = (mapId, apiUrl) ->
       select = L.DomUtil.create 'select', "schoolselect"
       select.onmousedown = L.DomEvent.stopPropagation # https://github.com/Leaflet/Leaflet/issues/936
       select.ontouchstart = L.DomEvent.stopPropagation # https://github.com/Leaflet/Leaflet/issues/936
-      select.onchange = (e) ->
+      select.onchange = ->
         loadAndShowSchool select.selectedIndex
       select.name = "school"
       for name, id of schools
@@ -114,8 +113,7 @@ window.skolevejEditor = (mapId, apiUrl) ->
     for type, desc of types
         option = L.DomUtil.create 'option', undefined, select
         option.value = type
-        # CODEREVIEW parseInt best practise with ,10
-        option.selected = true if parseInt(type) is currentType
+        option.selected = true if parseInt(type, 10) is currentType
         option.innerHTML = desc
     select.onchange = (e) ->
       selectFn (Object.keys types)[e.target.selectedIndex]
@@ -127,8 +125,8 @@ window.skolevejEditor = (mapId, apiUrl) ->
   # intersection-specific parts of creating a popup
   statusPopUpIntersection = (e) ->
     createPopUp e, currentSchool.intersectionTypes, e.target.options.intersectionType, (type) ->
-      defaultIntersectionType = parseInt(type)
-      e.layer.options.intersectionType = parseInt(type)
+      defaultIntersectionType = parseInt(type, 10)
+      e.layer.options.intersectionType = parseInt(type, 10)
 
   # renderCurrentSchool - transform data into map layer {{{4
   renderCurrentSchool = () ->
@@ -147,14 +145,14 @@ window.skolevejEditor = (mapId, apiUrl) ->
       title: "Klik for at redigere " + currentSchool.name
       icon: schoolIcon
       schoolid: currentSchool.id
-    schoolMarker.on 'click', (e) ->
+    schoolMarker.on 'click', ->
       window.location = "/1.2/backend/schools/edit/" + this.options.schoolid
     schoolMarker.addTo items
 
     for intersection in currentSchool.intersections
       marker = new L.Marker intersection.point,
         icon: L.divIcon {className: "intersection type#{intersection.type}"}
-        intersectionType: parseInt(intersection.type) or "type missing"
+        intersectionType: parseInt(intersection.type, 10) or "type missing"
 
       marker.on "click", statusPopUpIntersection
       marker.addTo items
@@ -231,7 +229,7 @@ window.skolevejEditor = (mapId, apiUrl) ->
       layerType = event.layerType
       layer = event.layer
       if layerType is "marker"
-        layer.options.intersectionType = parseInt(defaultIntersectionType) || 1
+        layer.options.intersectionType = parseInt(defaultIntersectionType, 10) || 1
         layer.addTo items
       if layerType is "polyline"
         layer.options.routeType = 1
