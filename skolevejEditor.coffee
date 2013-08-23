@@ -200,9 +200,12 @@ window.skolevejEditor = (mapId, apiUrl) ->
   # and add various controls etc.
   initMap = ->
     map = L.map mapId
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png',
-      attribution: '<a href="http://osm.org/copyright">OpenStreetMap</a>'
-    ).addTo(map)
+    googleLayer = new L.Google "HYBRID",
+      zIndexOffset = 1000
+    map.addLayer googleLayer
+    #L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png',
+    #  attribution: '<a href="http://osm.org/copyright">OpenStreetMap</a>'
+    #).addTo(map)
 
     items = new L.FeatureGroup()
     items.addTo(map).bringToFront()

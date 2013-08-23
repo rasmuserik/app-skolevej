@@ -224,10 +224,11 @@
       return upload();
     };
     initMap = function() {
+      var googleLayer, zIndexOffset;
+
       map = L.map(mapId);
-      L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-        attribution: '<a href="http://osm.org/copyright">OpenStreetMap</a>'
-      }).addTo(map);
+      googleLayer = new L.Google("HYBRID", zIndexOffset = 1000);
+      map.addLayer(googleLayer);
       items = new L.FeatureGroup();
       items.addTo(map).bringToFront();
       loadAndShowSchool(0);
