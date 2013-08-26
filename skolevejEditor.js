@@ -224,10 +224,10 @@
       return upload();
     };
     initMap = function() {
-      var googleLayer, zIndexOffset;
+      var googleLayer;
 
       map = L.map(mapId);
-      googleLayer = new L.Google("HYBRID", zIndexOffset = 1000);
+      googleLayer = new L.Google("HYBRID");
       map.addLayer(googleLayer);
       items = new L.FeatureGroup();
       items.addTo(map).bringToFront();
